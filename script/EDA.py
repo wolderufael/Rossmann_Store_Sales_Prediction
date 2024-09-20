@@ -127,3 +127,26 @@ class CustomerBehaviorAnalyzer:
         plt.legend()
         plt.grid(True)
         plt.show()
+        
+    def analyze_sales_customers_correlation(self,df):
+        logging.info("Correlation between customer and sales")
+        
+        # Calculate the correlation coefficient
+        correlation = df['Sales'].corr(df['Customers'])
+        print(f"Correlation coefficient between Sales and Customers: {correlation:.4f}")
+        
+        # Plot the scatter plot
+        plt.figure(figsize=(10, 6))
+        plt.scatter(df['Customers'], df['Sales'], alpha=0.5)
+        plt.title('Sales vs. Number of Customers')
+        plt.xlabel('Number of Customers')
+        plt.ylabel('Sales')
+        plt.grid(True)
+        
+        # Fit a regression line (optional)
+        z = np.polyfit(df['Customers'], df['Sales'], 1)
+        p = np.poly1d(z)
+        plt.plot(df['Customers'], p(df['Customers']), color='red', linewidth=2, label='Trend Line')
+        
+        plt.legend(loc='upper left')
+        plt.show()
