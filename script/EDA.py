@@ -2,10 +2,8 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
-from statsmodels.tsa.seasonal import seasonal_decompose
-from statsmodels.graphics.tsaplots import plot_acf, plot_pacf
-from statsmodels.tsa.stattools import acf, pacf
-import holidays
+from dateutil.easter import easter
+import datetime 
 import logging
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -81,29 +79,45 @@ class CustomerBehaviorAnalyzer:
             return (date.month == 12) & (date.day >= 18)  # Week leading to Christmas
 
         def is_easter(date):
-            easter_date = easter(date.year)  # Get the Easter date for the given year
+            easter_date = pd.Timestamp(easter(date.year))  # Convert easter date to Timestamp
             return (date >= (easter_date - pd.Timedelta(days=3))) & (date <= (easter_date + pd.Timedelta(days=3)))  # 3 days before and after Easter
 
-        # Label Christmas and Easter periods
+        def is_july_4th(date):
+            return (date.month == 7) & (date.day == 4)  # July 4th
+
+        def is_thanksgiving(date):
+            # Thanksgiving: 4th Thursday of November
+            if date.month == 11:
+                # Calculate the 4th Thursday of November
+                first_day = datetime.date(date.year, 11, 1)
+                first_thursday = first_day + pd.DateOffset(days=(3 - first_day.weekday()) % 7)  # Nearest Thursday
+                thanksgiving_day = first_thursday + pd.DateOffset(weeks=3)  # 4th Thursday
+                thanksgiving_day = pd.Timestamp(thanksgiving_day)  # Convert to Timestamp
+                return date == thanksgiving_day
+            return False
+
+        # Label Christmas, Easter, July 4th, and Thanksgiving periods
         df_copy['Season'] = 'Non-Holiday'
         df_copy.loc[df_copy['Date'].apply(is_christmas), 'Season'] = 'Christmas Season'
         df_copy.loc[df_copy['Date'].apply(is_easter), 'Season'] = 'Easter Season'
+        df_copy.loc[df_copy['Date'].apply(is_july_4th), 'Season'] = 'July 4th Season'
+        df_copy.loc[df_copy['Date'].apply(is_thanksgiving), 'Season'] = 'Thanksgiving Season'
 
         # Group by 'Season' and calculate average sales
         seasonal_sales = df_copy.groupby('Season')['Sales'].mean()
 
         # Plot the seasonal sales
         plt.figure(figsize=(10, 6))
-        seasonal_sales.plot(kind='bar', color=['#87cefa', '#ffa07a', '#20b2aa'])
+        seasonal_sales.plot(kind='bar', color=['#87cefa', '#ffa07a', '#20b2aa', '#ffb6c1', '#90ee90'])
         plt.title('Average Sales During Seasonal Holidays')
         plt.xlabel('Holiday Season')
         plt.ylabel('Average Sales')
         plt.xticks(rotation=0)
         plt.show()
         
-        # Line plot to show daily sales during the Christmas and Easter seasons
+        # Line plot to show daily sales during Christmas, Easter, July 4th, and Thanksgiving seasons
         plt.figure(figsize=(10, 6))
-        for season in ['Christmas Season', 'Easter Season']:
+        for season in ['Christmas Season', 'Easter Season', 'July 4th Season', 'Thanksgiving Season']:
             season_data = df_copy[df_copy['Season'] == season].groupby('Date')['Sales'].mean()
             plt.plot(season_data.index, season_data.values, label=season)
         
