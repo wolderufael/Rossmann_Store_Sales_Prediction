@@ -191,3 +191,49 @@ class CustomerBehaviorAnalyzer:
 
         plt.tight_layout()
         plt.show()
+        
+    def analyze_promo_effectiveness_by_store_type_assortment(self,df):
+        logging.info(" effective ways promos can be deployed  ")
+        
+        # Group by StoreType, Assortment, and Promo status
+        store_promo_analysis = df.groupby(['StoreType', 'Assortment', 'Promo']).agg({
+            'Sales': 'mean',
+            'Customers': 'mean'
+        }).reset_index()
+        
+        # Pivot the table for easier comparison
+        sales_pivot = store_promo_analysis.pivot(index=['StoreType', 'Assortment'], columns='Promo', values='Sales')
+        customers_pivot = store_promo_analysis.pivot(index=['StoreType', 'Assortment'], columns='Promo', values='Customers')
+
+        # Calculate the difference in sales and customers between promo and non-promo periods
+        sales_pivot['Sales_Difference'] = sales_pivot[1] - sales_pivot[0]
+        customers_pivot['Customers_Difference'] = customers_pivot[1] - customers_pivot[0]
+
+        # Identify store types and assortments where promo increases sales
+        effective_combinations = sales_pivot[sales_pivot['Sales_Difference'] > 0].index.tolist()
+
+        print("StoreType and Assortment combinations where promos could be effectively deployed:")
+        for store_type, assortment in effective_combinations:
+            print(f"StoreType: {store_type}, Assortment: {assortment}")
+
+        # Plotting sales and customers by StoreType and Assortment
+        plt.figure(figsize=(14, 6))
+
+        # Sales plot
+        plt.subplot(1, 2, 1)
+        sales_pivot[[0, 1]].plot(kind='bar', ax=plt.gca(), colormap='coolwarm')
+        plt.title('Average Sales by StoreType, Assortment, and Promo Status')
+        plt.xlabel('StoreType, Assortment')
+        plt.ylabel('Average Sales')
+        plt.xticks(rotation=45)
+
+        # Customers plot
+        plt.subplot(1, 2, 2)
+        customers_pivot[[0, 1]].plot(kind='bar', ax=plt.gca(), colormap='coolwarm')
+        plt.title('Average Customers by StoreType, Assortment, and Promo Status')
+        plt.xlabel('StoreType, Assortment')
+        plt.ylabel('Average Customers')
+        plt.xticks(rotation=45)
+
+        plt.tight_layout()
+        plt.show()
