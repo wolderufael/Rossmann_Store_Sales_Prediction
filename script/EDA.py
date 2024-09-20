@@ -237,3 +237,194 @@ class CustomerBehaviorAnalyzer:
 
         plt.tight_layout()
         plt.show()
+        
+    def analyze_customer_behavior_open_close(self,df):
+        logging.info("Trends of customer behavior during store opening and closing times")
+        # Group by 'Open' status and calculate the mean number of customers
+        open_close_analysis = df.groupby('Open').agg({
+            'Customers': 'mean',
+            'Date': 'count'
+        }).rename(columns={'Date': 'Days'}).reset_index()
+
+        print("Average number of customers during open and closed days:")
+        print(open_close_analysis)
+        
+        # Plot the average number of customers during open and closed days
+        plt.figure(figsize=(8, 5))
+        plt.bar(['Closed', 'Open'], open_close_analysis['Customers'], color=['red', 'green'])
+        plt.title('Average Customers During Store Open/Closed Times')
+        plt.ylabel('Average Number of Customers')
+        plt.show()
+
+        # Trend of customer behavior over time when the store is open
+        df_open = df[df['Open'] == 1].copy()
+
+        # Group by Date to analyze daily customer trends
+        daily_customers = df_open.groupby('Date').agg({
+            'Customers': 'sum'
+        }).reset_index()
+
+        # Plot daily customer trends
+        plt.figure(figsize=(14, 6))
+        plt.plot(daily_customers['Date'], daily_customers['Customers'], label='Daily Customers', color='blue')
+        plt.title('Customer Trends Over Time (Store Open Days)')
+        plt.xlabel('Date')
+        plt.ylabel('Number of Customers')
+        plt.xticks(rotation=45)
+        plt.grid(True)
+        plt.show()
+        
+    def analyze_weekday_open_stores(self,df):
+        logging.info('stores which are open on all weekdays')
+        
+        # Filter data for weekdays (Monday to Friday: DayOfWeek 1 to 5)
+        weekdays_df = df[(df['DayOfWeek'] >= 1) & (df['DayOfWeek'] <= 5)]
+        
+        # Group by Store and check if they are open on all weekdays
+        weekday_open_stores = weekdays_df.groupby('Store').agg({
+            'Open': lambda x: (x == 1).all()  # Check if the store is open all weekdays
+        }).reset_index()
+
+        # Filter out stores that are open all weekdays
+        stores_open_all_weekdays = weekday_open_stores[weekday_open_stores['Open'] == True]['Store'].tolist()
+
+        # Filter data for weekends (Saturday and Sunday: DayOfWeek 6 and 7)
+        weekends_df = df[(df['DayOfWeek'] >= 6) & (df['DayOfWeek'] <= 7)]
+
+        # Split weekend data into two groups: stores open all weekdays and others
+        weekend_sales_all_weekdays = weekends_df[weekends_df['Store'].isin(stores_open_all_weekdays)]
+        weekend_sales_other_stores = weekends_df[~weekends_df['Store'].isin(stores_open_all_weekdays)]
+
+        # Calculate average weekend sales for both groups
+        avg_sales_all_weekdays = weekend_sales_all_weekdays['Sales'].mean()
+        avg_sales_other_stores = weekend_sales_other_stores['Sales'].mean()
+
+        # Print the results
+        print(f"Average weekend sales for stores open all weekdays: {avg_sales_all_weekdays:.2f}")
+        print(f"Average weekend sales for other stores: {avg_sales_other_stores:.2f}")
+
+        # Plot the comparison
+        plt.figure(figsize=(8, 5))
+        plt.bar(['Stores Open All Weekdays', 'Other Stores'], [avg_sales_all_weekdays, avg_sales_other_stores], color=['blue', 'gray'])
+        plt.title('Weekend Sales Comparison for Stores Open All Weekdays vs Other Stores')
+        plt.ylabel('Average Sales')
+        plt.show()
+
+    def analyze_assortment_sales(self,df):
+        logging.info("sales per assortment types")        
+        # Mapping for the assortment labels
+        assortment_mapping = {'a': 'Basic', 'b': 'Extra', 'c': 'Extended'}
+        
+        # Map the assortment column to the descriptive names
+        df['Assortment'] = df['Assortment'].map(assortment_mapping)
+        
+        # Group by Assortment and calculate average sales
+        assortment_sales = df.groupby('Assortment')['Sales'].mean().reset_index()
+
+        # Print the average sales for each assortment type
+        print("Average sales by Assortment type:")
+        print(assortment_sales)
+        
+        # Plot the average sales by Assortment type
+        plt.figure(figsize=(8, 5))
+        plt.bar(assortment_sales['Assortment'], assortment_sales['Sales'], color=['blue', 'green', 'orange'])
+        plt.title('Average Sales by Assortment Type')
+        plt.xlabel('Assortment Type')
+        plt.ylabel('Average Sales')
+        plt.xticks(ticks=[0, 1, 2], labels=['Basic', 'Extra', 'Extended'])
+        plt.show()
+        
+    def analyze_competition_distance_sales(self,df, city_center_threshold=1000):
+        logging.info("Effect of competitor distance")
+        
+        # Handling missing or undefined competition distances by assigning a separate category
+        df['CompetitionDistance'] = df['CompetitionDistance'].fillna(-1)  # -1 represents missing distances
+
+        # Grouping by distance ranges
+        df['DistanceRange'] = pd.cut(df['CompetitionDistance'], 
+                                    bins=[-1, 500, 1000, 5000, 10000, float('inf')], 
+                                    labels=['0-500m', '500-1000m', '1-5km', '5-10km', '10km+'])
+
+        # Calculate average sales for each distance range
+        distance_sales = df.groupby('DistanceRange',observed=True)['Sales'].mean().reset_index()
+
+        # Print the average sales for each distance range
+        print("Average sales by competition distance range:")
+        print(distance_sales)
+
+        # Plot the average sales by distance range
+        plt.figure(figsize=(10, 6))
+        plt.bar(distance_sales['DistanceRange'], distance_sales['Sales'], color='teal')
+        plt.title('Average Sales by Competitor Distance')
+        plt.xlabel('Competition Distance Range')
+        plt.ylabel('Average Sales')
+        plt.show()
+
+        # City center analysis (stores within the city center threshold)
+        city_center_stores = df[df['CompetitionDistance'] <= city_center_threshold]
+        non_city_center_stores = df[df['CompetitionDistance'] > city_center_threshold]
+
+        # Calculate and compare average sales in city center vs non-city center
+        city_vs_non_city_sales = pd.DataFrame({
+            'Location': ['City Center', 'Non-City Center'],
+            'Average Sales': [city_center_stores['Sales'].mean(), non_city_center_stores['Sales'].mean()]
+        })
+
+        print("\nAverage Sales Comparison between City Center and Non-City Center Stores:")
+        print(city_vs_non_city_sales)
+
+        # Plot comparison between city center and non-city center stores
+        plt.figure(figsize=(8, 5))
+        plt.bar(city_vs_non_city_sales['Location'], city_vs_non_city_sales['Average Sales'], color=['blue', 'orange'])
+        plt.title('Average Sales: City Center vs Non-City Center Stores')
+        plt.xlabel('Location')
+        plt.ylabel('Average Sales')
+        plt.show()
+        
+    def analyze_new_competitor_impact(self,df):
+        logging.info('new competitor impact')
+        
+        # Convert 'Date' column to datetime if not already
+        df['Date'] = pd.to_datetime(df['Date'])
+
+        # Sort by 'Store' and 'Date' for easier comparison
+        df = df.sort_values(by=['Store', 'Date'])
+
+        # Identify stores that initially had no competition (NA in CompetitionDistance) but later got valid values
+        df['CompetitionInitiallyNA'] = df.groupby('Store')['CompetitionDistance'].transform(lambda x: x.ffill().isna())
+
+        # Filter for the rows where CompetitionDistance was initially NA but later had valid values
+        stores_with_new_competition = df.groupby('Store').filter(lambda x: x['CompetitionInitiallyNA'].any() and x['CompetitionDistance'].notna().any())
+
+        # Split data into two periods: before and after competition
+        before_competition = stores_with_new_competition[stores_with_new_competition['CompetitionInitiallyNA']]
+        after_competition = stores_with_new_competition[~stores_with_new_competition['CompetitionInitiallyNA']]
+
+        # Aggregate sales data for stores with new competitors
+        avg_sales_before = before_competition.groupby('Store')['Sales'].mean()
+        avg_sales_after = after_competition.groupby('Store')['Sales'].mean()
+
+        # Compare average sales before and after competitor entry
+        sales_comparison = pd.DataFrame({
+            'AvgSalesBefore': avg_sales_before,
+            'AvgSalesAfter': avg_sales_after
+        }).dropna()
+
+        # Plot the comparison
+        plt.figure(figsize=(10, 6))
+        plt.plot(sales_comparison.index, sales_comparison['AvgSalesBefore'], label='Before Competitor', color='blue', marker='o')
+        plt.plot(sales_comparison.index, sales_comparison['AvgSalesAfter'], label='After Competitor', color='red', marker='o')
+        plt.title('Average Sales Before and After Competitor Entry')
+        plt.xlabel('Store')
+        plt.ylabel('Average Sales')
+        plt.xticks(rotation=90)
+        plt.legend()
+        plt.tight_layout()
+        plt.show()
+
+        # Print the overall difference in sales
+        sales_comparison['Difference'] = sales_comparison['AvgSalesAfter'] - sales_comparison['AvgSalesBefore']
+        print("\nAverage sales comparison (Before vs After competitor entry):")
+        print(sales_comparison)
+        
+    
