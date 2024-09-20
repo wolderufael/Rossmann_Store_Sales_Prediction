@@ -150,3 +150,44 @@ class CustomerBehaviorAnalyzer:
         
         plt.legend(loc='upper left')
         plt.show()
+        
+    def analyze_promo_effect(self,df):
+        logging.info("Promo effect on sales and customers")
+        
+        # Calculate average sales and customers during promo and non-promo periods
+        promo_sales = df[df['Promo'] == 1]['Sales'].mean()
+        non_promo_sales = df[df['Promo'] == 0]['Sales'].mean()
+        
+        promo_customers = df[df['Promo'] == 1]['Customers'].mean()
+        non_promo_customers = df[df['Promo'] == 0]['Customers'].mean()
+        
+        print(f"Average Sales During Promo: {promo_sales:.2f}")
+        print(f"Average Sales During Non-Promo: {non_promo_sales:.2f}")
+        print(f"Average Customers During Promo: {promo_customers:.2f}")
+        print(f"Average Customers During Non-Promo: {non_promo_customers:.2f}")
+        
+        # Bar plot for average sales and customers
+        labels = ['Promo', 'Non-Promo']
+        sales_means = [promo_sales, non_promo_sales]
+        customers_means = [promo_customers, non_promo_customers]
+
+        x = range(len(labels))
+        
+        plt.figure(figsize=(12, 6))
+        
+        # Plotting sales
+        plt.subplot(1, 2, 1)
+        plt.bar(x, sales_means, color=['#87cefa', '#ffa07a'])
+        plt.title('Average Sales During Promo vs Non-Promo')
+        plt.xticks(x, labels)
+        plt.ylabel('Average Sales')
+        
+        # Plotting customers
+        plt.subplot(1, 2, 2)
+        plt.bar(x, customers_means, color=['#20b2aa', '#ffb6c1'])
+        plt.title('Average Customers During Promo vs Non-Promo')
+        plt.xticks(x, labels)
+        plt.ylabel('Average Customers')
+
+        plt.tight_layout()
+        plt.show()
