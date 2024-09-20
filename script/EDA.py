@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-import seaborn as sns
+from scipy.stats import zscore
 from dateutil.easter import easter
 import datetime 
 import logging
@@ -9,9 +9,41 @@ import logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 class CustomerBehaviorAnalyzer:
     def missing_value(self,data):
-        logging.info("Loading data from file...")
+        logging.info("Check missing values")
         missing_value=data.isnull().sum()
         return missing_value
+    # def replace_outlier(self,df):
+    def replace_outliers_with_mean(self,data, z_threshold=3):
+        logging.info("replace outliers of Sales and Customer")
+        # Iterate through each numeric column
+        for col in data.select_dtypes(include=[np.number]).columns:
+            if col not in ['Sales','Customers']:
+                col_data = data[col].dropna()
+                col_zscore = zscore(col_data)
+                
+                # Create a boolean mask for outliers
+                outlier_mask = abs(col_zscore) > z_threshold
+                
+                # Calculate the mean of non-outlier values (excluding NaNs)
+                mean_value = col_data[~outlier_mask].mean()
+                
+                # Ensure the column is of float type to avoid dtype incompatibility
+                data[col] = data[col].astype(float)
+                
+                # Replace outliers in the original DataFrame Need to align the original index with the calculated z-scores
+                data.loc[data[col].notna() & (abs(zscore(data[col].fillna(0))) > z_threshold), col] = mean_value
+    def handle_missing_values(self,df):
+        logging.info('handle missing values')
+        # Fill missing CompetitionDistance with a new category 
+        df.fillna({
+            'CompetitionDistance': -1,  # Can also use -1 to mark missing distances
+            'CompetitionOpenSinceMonth': 0,
+            'CompetitionOpenSinceYear': 0,
+            'Promo2SinceWeek': 0,
+            'Promo2SinceYear': 0,
+            'PromoInterval': 'None'
+        }, inplace=True)
+
     def compare_promo_distribution(self,train_df, test_df):
         logging.info("Promo Distribution Comparison: Train vs Test......")
         # Get the promo distribution for both training and test sets
