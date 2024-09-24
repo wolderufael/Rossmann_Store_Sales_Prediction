@@ -110,7 +110,7 @@ class Modelling:
         print("Upper bound of the confidence interval: ",upper_bound)
         print("Mean prediction across bootstrap samples: ",prediction_mean)
     
-    def save_model_with_timestamp(model, folder_path='models/'):
+    def save_model_with_timestamp(self,model,name, folder_path='models/'):
         logging.info('Serializes and saves a trained model with a timestamp.')
         
         # Create the folder if it doesn't exist
@@ -121,7 +121,7 @@ class Modelling:
         timestamp = datetime.now().strftime("%d-%m-%Y-%H-%M-%S-00")
         
         # Create a filename with the timestamp
-        filename = f'{folder_path}model-{timestamp}.pkl'
+        filename = f'{folder_path}{name}-{timestamp}.pkl'
         
         # Save the model using pickle
         with open(filename, 'wb') as file:
