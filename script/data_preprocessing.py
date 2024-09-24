@@ -27,6 +27,8 @@ class Preprocessor:
                 
                 # Replace outliers in the original DataFrame Need to align the original index with the calculated z-scores
                 data.loc[data[col].notna() & (abs(zscore(data[col].fillna(0))) > z_threshold), col] = mean_value
+        return data 
+    
     def handle_missing_values(self,df):
         logging.info('handle missing values')
         # Fill missing CompetitionDistance with a new category 
@@ -38,6 +40,8 @@ class Preprocessor:
             'Promo2SinceYear': 0,
             'PromoInterval': 'None'
         }, inplace=True)
+        
+        return df
         
     def feature_engineering(self,df):
         logging.info('feature engineering')
@@ -93,3 +97,5 @@ class Preprocessor:
         columns_to_scale=['Sales', 'Customers','CompetitionDistance', 'CompetitionOpenSinceMonth','CompetitionOpenSinceYear','Promo2SinceWeek','Promo2SinceYear','DaysToHoliday','DaysAfterHoliday']
         # Apply scaler only to the specified numeric columns
         df[columns_to_scale] = scaler.fit_transform(df[columns_to_scale])
+        
+        return df
