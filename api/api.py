@@ -38,8 +38,7 @@ def preprocess_input_rf(df):
     processed_df = processed_df.drop('Sales', axis=1)
     
     return processed_df
-def preprocess_input_lstm(df):
-    
+
     
 # Define random forrest prediction endpoint for CSV file input
 @app.route('/predict_random_forrest', methods=['POST'])
@@ -60,31 +59,6 @@ def predict():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-# @app.route('/predict_lstm', methods=['POST'])
-# def predict():
-#     try:
-#         # Ensure that a CSV file is included in the request
-#         if 'file' not in request.files:
-#             return jsonify({'error': 'No file provided'}), 400
-
-#         # Read the CSV file from the request
-#         file = request.files['file']
-#         input_data = pd.read_csv(file)
-
-#         # Preprocess the data
-#         processed_data = preprocess_input(input_data)
-#         # # Make sure to drop the 'Sales' column (since it's the target) if it exists
-#         # if 'Sales' in input_data.columns:
-#         #     input_data = input_data.drop('Sales', axis=1)
-
-#         # Make predictions using the loaded model
-#         predictions = model.predict(processed_data)
-
-#         # Return the predictions as a JSON response
-#         return jsonify({'predictions': predictions.tolist()})
-
-#     except Exception as e:
-#         return jsonify({'error': str(e)}), 500
 
 # Define a health check route
 @app.route('/health', methods=['GET'])
