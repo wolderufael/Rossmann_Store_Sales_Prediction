@@ -1,0 +1,42 @@
+name: Run Unit Tests
+
+on:
+  push:
+    branches:
+      - master  
+  pull_request:
+    branches:
+      - master  
+
+jobs:
+  test:
+    runs-on: ubuntu-latest  # Use the latest Ubuntu as the runner environment
+
+    strategy:
+      matrix:
+        python-version: [3.8, 3.9, 3.10]  # Versions to test against
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+
+    - name: Run tests
+      run: |
+        python -m unittest discover -s tests  # Adjust if necessary
+
+    - name: Upload test results
+      if: always()
+      uses: actions/upload-artifact@v3
+      with:
+        name: test-results
+        path: test-reports/  
