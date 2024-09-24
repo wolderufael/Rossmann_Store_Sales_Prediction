@@ -2,7 +2,7 @@ import pandas as pd
 import logging
 from scipy.stats import zscore
 import numpy as np
-from sklearn.preprocessing import StandardScaler, LabelEncoder
+from sklearn.preprocessing import  MinMaxScaler
 from datetime import datetime
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -31,7 +31,7 @@ class Preprocessor:
         logging.info('handle missing values')
         # Fill missing CompetitionDistance with a new category 
         df.fillna({
-            'CompetitionDistance': -1,  # Can also use -1 to mark missing distances
+            'CompetitionDistance': df['CompetitionDistance'].median(),  # Can also use  to mark missing distances
             'CompetitionOpenSinceMonth': 0,
             'CompetitionOpenSinceYear': 0,
             'Promo2SinceWeek': 0,
@@ -54,6 +54,7 @@ class Preprocessor:
         df['IsEndOfMonth'] =df['Date'].dt.day.apply(lambda x: 1 if x > 20 else 0)
 
         # Add holiday proximity features
+        df['StateHoliday'] = df['StateHoliday'].map({'0': 0, 'a': 1, 'b': 1, 'c': 1})
         holiday_dates = df.loc[df['StateHoliday'] == '1', 'Date']
         df['DaysToHoliday'] = df.apply(lambda row: 0 if row['StateHoliday'] == '1' 
                                else (holiday_dates[holiday_dates > row['Date']].min() - row['Date']).days 
@@ -66,4 +67,29 @@ class Preprocessor:
         # Drop original 'Date' column after feature extraction
         df.drop(columns=['Date'], inplace=True)
 
-     
+        return df
+
+    def encode_categorical(self,df):
+        #Sine and Cosine transformation for 'DayOfWeek' and 'Month'
+        df['DayOfWeek_sin'] = np.sin(2 * np.pi * df['DayOfWeek'] / 7)
+        df['DayOfWeek_cos'] = np.cos(2 * np.pi * df['DayOfWeek'] / 7) 
+        df.drop('DayOfWeek', axis=1, inplace=True)
+        
+        df['Month_sin'] = np.sin(2 * np.pi * df['Month'] / 12)
+        df['Month_cos'] = np.cos(2 * np.pi * df['Month'] / 12) 
+        df.drop('Month', axis=1, inplace=True)
+        #oneHot encoding for assortment,store type and promointerval
+        df = pd.get_dummies(df, columns=['StoreType', 'Assortment', 'PromoInterval'], drop_first=False)
+        # Ensure 'StoreType' is actually dropped if present
+        if 'StoreType' in df.columns:
+            df.drop('StoreType', axis=1, inplace=True)
+        
+        return df
+        
+        
+    def scale_data(self,df):
+        scaler = MinMaxScaler()
+        
+        columns_to_scale=['Sales', 'Customers','CompetitionDistance', 'CompetitionOpenSinceMonth','CompetitionOpenSinceYear','Promo2SinceWeek','Promo2SinceYear','DaysToHoliday','DaysAfterHoliday']
+        # Apply scaler only to the specified numeric columns
+        df[columns_to_scale] = scaler.fit_transform(df[columns_to_scale])
