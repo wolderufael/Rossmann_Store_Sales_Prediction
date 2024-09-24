@@ -32,17 +32,26 @@ The project is based on the Kaggle competition dataset: [Rossmann Store Sales](h
 ```plaintext
 Rossmann_Store_Sales_Prediction/
 │
+├── api/ 
+│   ├── api.py
+│ 
 ├── data/                  # Contains the dataset (training and testing data)
 │   ├── train.csv
 │   ├── test.csv
 |   ├── store.csv
 │
+├── models/                  # Contains the trained models
+│   ├── LSTM_model-24-09-2024-14-34-26-00.pkl
+│   ├── random_forrest_model-24-09-2024-14-38-55-00.pkl
+|   
 ├── notebooks/             # Jupyter notebooks for data exploration and model development
-│   ├── 01_data_exploration.ipynb
-│   ├── 02_feature_engineering.ipynb
-│   ├── 03_modeling.ipynb
+│   ├── data_exploration.ipynb
+│   ├── LSTM_prediction.ipynb
+│   ├── random_forrest_prediction.ipynb 
 │
-├── script/                # Python scripts for feature engineering and modeling
+├── script/  
+│   ├── data_preprocessing.py
+│   ├── deep_learning.py          # Python scripts for feature engineering and modeling
 │   ├── EDA.py             # Exploratory Data Analysis and Feature Engineering script
 │   ├── modeling.py        # Model building and evaluation script
 │
