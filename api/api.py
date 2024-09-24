@@ -12,7 +12,7 @@ import numpy as np
 app = Flask(__name__)
 
 # Load the pre-trained random forrest model model using pickle
-with open('../models/random_forrest_model-24-09-2024-14-38-55-00.pkl', 'rb') as f:
+with open('models/random_forrest_model-24-09-2024-14-38-55-00.pkl', 'rb') as f:
     model = pickle.load(f)
 
 
