@@ -19,12 +19,12 @@ sys.path.append(os.path.abspath('../models'))
 app = Flask(__name__)
 
 # Load the pre-trained random forrest model model using pickle
-with open('../models/random_forrest_model-24-09-2024-14-38-55-00.pkl', 'rb') as f:
+with open('models/random_forrest_model-24-09-2024-14-38-55-00.pkl', 'rb') as f:
     rf_model = pickle.load(f)
     
 # Load the pre-trained LSTM model model using pickle
-with open('../models/LSTM_model-24-09-2024-22-30-39-00.pkl', 'rb') as f:
-    lstm_model = pickle.load(f)
+# with open('../models/LSTM_model-24-09-2024-22-30-39-00.pkl', 'rb') as f:
+#     lstm_model = pickle.load(f)
 
 from script.data_preprocessing import Preprocessor
 rf_processor=Preprocessor()
