@@ -20,9 +20,14 @@
 # CMD ["python", "api/api.py"]
 FROM python:3.9-buster
 
+# Copy the entire project directory into /opt/ml_in_app in the container
 ADD . /opt/ml_in_app
-WORKDIR /opt/ml_in_app
 
-# install packages by conda
-RUN pip install -r requirements_prod.txt
-CMD ["python", "app.py"]
+# Set the working directory
+WORKDIR /opt/ml_in_app/api
+
+# Install required packages
+RUN pip install -r ../requirements_prod.txt
+
+# Command to run the application
+CMD ["python", "api.py"]
