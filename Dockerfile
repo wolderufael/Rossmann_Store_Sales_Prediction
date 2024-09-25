@@ -24,7 +24,7 @@ RUN pip install -r requirements_prod.txt
 # Install gdown for downloading from Google Drive
 RUN pip install gdown
 
-# Download the model file using gdown (replace the file ID with your actual file ID)
+# Download the model file using gdown 
 RUN gdown https://drive.google.com/uc?id=12oxV8ajG6FnuCDiogPYPHKdI84-1VUmm -O models/random_forrest_model-25-09-2024-05-03-20-00.pkl
 
 # Command to run the application
